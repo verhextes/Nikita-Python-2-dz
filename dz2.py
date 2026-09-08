@@ -62,21 +62,27 @@ if __name__ == "__main__" Этот оператор проверяет, был �
 и в конце у пользователя просят юрл сайта и проверяют через "check_status"
 '''
 
+"""Модуль для работы с базой данных склада через PyMySQL."""
+
 import pymysql
 import pymysql.cursors
 
+
 def get_connection():
+    """Создает и возвращает подключение к базе данных."""
     return pymysql.connect(
         host="127.0.0.1",
         user="warehouse_user",
-        password="CHANGE_ME",  # Укажите ваш пароль здесь
+        password="CHANGE_ME",
         database="warehouse_db",
         charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,
         autocommit=False,
     )
 
+
 def ping():
+    """Проверяет соединение с базой данных, запрашивая системную информацию."""
     conn = get_connection()
     try:
         with conn.cursor() as cur:
@@ -87,7 +93,9 @@ def ping():
     finally:
         conn.close()
 
+
 def fetch_products():
+    """Получает список всех продуктов и один конкретный продукт по SKU."""
     conn = get_connection()
     try:
         with conn.cursor() as cur:
@@ -96,7 +104,7 @@ def fetch_products():
             rows = cur.fetchall()
             for row in rows:
                 print(row["sku"], row["qty"])
-            
+
             # Получение одного продукта по SKU
             cur.execute("SELECT * FROM products WHERE sku = %s", ("SKU-002",))
             one = cur.fetchone()
@@ -104,10 +112,10 @@ def fetch_products():
     finally:
         conn.close()
 
+
 if __name__ == "__main__":
     print("--- Проверка соединения (ping) ---")
     ping()
-    
+
     print("\n--- Получение данных о продуктах ---")
     fetch_products()
-
