@@ -61,3 +61,53 @@ if __name__ == "__main__":
 if __name__ == "__main__" Этот оператор проверяет, был ли файл запущен напрямую
 и в конце у пользователя просят юрл сайта и проверяют через "check_status"
 '''
+
+import pymysql
+import pymysql.cursors
+
+def get_connection():
+    return pymysql.connect(
+        host="127.0.0.1",
+        user="warehouse_user",
+        password="CHANGE_ME",  # Укажите ваш пароль здесь
+        database="warehouse_db",
+        charset="utf8mb4",
+        cursorclass=pymysql.cursors.DictCursor,
+        autocommit=False,
+    )
+
+def ping():
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT DATABASE() AS db, NOW() AS now, USER() AS user")
+            row = cur.fetchone()
+            print(row)
+            return row
+    finally:
+        conn.close()
+
+def fetch_products():
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            # Получение всех продуктов
+            cur.execute("SELECT id, sku, name, qty FROM products ORDER BY sku")
+            rows = cur.fetchall()
+            for row in rows:
+                print(row["sku"], row["qty"])
+            
+            # Получение одного продукта по SKU
+            cur.execute("SELECT * FROM products WHERE sku = %s", ("SKU-002",))
+            one = cur.fetchone()
+            print("one:", one)
+    finally:
+        conn.close()
+
+if __name__ == "__main__":
+    print("--- Проверка соединения (ping) ---")
+    ping()
+    
+    print("\n--- Получение данных о продуктах ---")
+    fetch_products()
+
