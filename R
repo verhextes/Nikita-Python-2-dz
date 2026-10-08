@@ -45,72 +45,126 @@ grades = [
 
 def moscow_students(students):
     """Задание 1. Список имён студентов из Москвы (в исходном порядке)."""
-    return [s["name"] for s in students if s["city"] == "Москва"]
+    result = []
+    for s in students:
+        if s["city"] == "Москва":
+            result.append(s["name"])
+    return result
 
 
 def sorted_cities(students):
     """Задание 2. Отсортированный список городов без повторов."""
-    return sorted({s["city"] for s in students})
+    cities = set()
+    for s in students:
+        cities.add(s["city"])
+    return sorted(cities)
 
 
 def average(values):
     """Задание 3. Среднее значений, округлённое до 2 знаков; для пустого списка 0.0."""
-    if not values:
+    if len(values) == 0:
         return 0.0
-    return round(sum(values) / len(values), 2)
+    total = 0
+    for v in values:
+        total += v
+    return round(total / len(values), 2)
 
 
 def high_scores(students, courses, grades, min_score):
     """Задание 4. Список кортежей (имя, название курса, оценка) для оценок >= min_score."""
-    names = {s["id"]: s["name"] for s in students}
-    titles = {c["id"]: c["title"] for c in courses}
-    return [
-        (names[g["student_id"]], titles[g["course_id"]], g["score"])
-        for g in grades
-        if g["score"] >= min_score
-    ]
+    names = {}
+    for s in students:
+        names[s["id"]] = s["name"]
+
+    titles = {}
+    for c in courses:
+        titles[c["id"]] = c["title"]
+
+    result = []
+    for g in grades:
+        if g["score"] >= min_score:
+            name = names[g["student_id"]]
+            title = titles[g["course_id"]]
+            result.append((name, title, g["score"]))
+    return result
 
 
 def count_by_city(students):
     """Задание 5. Словарь {город: количество студентов}."""
     result = {}
     for s in students:
-        result[s["city"]] = result.get(s["city"], 0) + 1
+        city = s["city"]
+        if city in result:
+            result[city] += 1
+        else:
+            result[city] = 1
     return result
 
 
 def took_both(grades, course_a, course_b):
     """Задание 6. Отсортированный список id студентов с оценками по обоим курсам."""
-    set_a = {g["student_id"] for g in grades if g["course_id"] == course_a}
-    set_b = {g["student_id"] for g in grades if g["course_id"] == course_b}
-    return sorted(set_a & set_b)
+    set_a = set()
+    set_b = set()
+    for g in grades:
+        if g["course_id"] == course_a:
+            set_a.add(g["student_id"])
+        if g["course_id"] == course_b:
+            set_b.add(g["student_id"])
+
+    common = set()
+    for sid in set_a:
+        if sid in set_b:
+            common.add(sid)
+    return sorted(common)
 
 
 def no_grades(students, grades):
     """Задание 7. Отсортированный список имён студентов без единой оценки."""
-    with_grades = {g["student_id"] for g in grades}
-    return sorted(s["name"] for s in students if s["id"] not in with_grades)
+    with_grades = set()
+    for g in grades:
+        with_grades.add(g["student_id"])
+
+    result = []
+    for s in students:
+        if s["id"] not in with_grades:
+            result.append(s["name"])
+    return sorted(result)
 
 
 def top_students(students, grades, n):
     """Задание 8. n лучших студентов: список кортежей (имя, средний балл)."""
-    names = {s["id"]: s["name"] for s in students}
+    names = {}
+    for s in students:
+        names[s["id"]] = s["name"]
+
+    # группируем оценки по студенту
     scores = {}
     for g in grades:
-        scores.setdefault(g["student_id"], []).append(g["score"])
+        sid = g["student_id"]
+        if sid not in scores:
+            scores[sid] = []
+        scores[sid].append(g["score"])
 
-    result = [
-        (names[sid], average(sc_list))
-        for sid, sc_list in scores.items()
-    ]
-    # сортировка: по убыванию среднего, при равенстве — по имени
-    result.sort(key=lambda x: (-x[1], x[0]))
-    return result[:n]
+    # считаем средний балл для каждого студента
+    rows = []
+    for sid, sc_list in scores.items():
+        rows.append((names[sid], average(sc_list)))
+
+    # обычная функция-ключ вместо лямбды
+    def sort_key(item):
+        name, avg = item
+        return (-avg, name)
+
+    rows.sort(key=sort_key)
+    return rows[:n]
 
 
 def best_score_per_course(courses, grades):
     """Задание 9. Словарь {название курса: максимальная оценка}."""
-    titles = {c["id"]: c["title"] for c in courses}
+    titles = {}
+    for c in courses:
+        titles[c["id"]] = c["title"]
+
     result = {}
     for g in grades:
         title = titles[g["course_id"]]
@@ -124,10 +178,12 @@ class Gradebook:
 
     def __init__(self, grades):
         # сохраняем копию, чтобы не менять исходный список
-        self._grades = [dict(g) for g in grades]
+        self._grades = []
+        for g in grades:
+            self._grades.append(dict(g))
 
     def add(self, student_id, course_id, score):
-        if not (0 <= score <= 100):
+        if score < 0 or score > 100:
             raise ValueError("оценка должна быть от 0 до 100")
         self._grades.append({
             "student_id": student_id,
@@ -136,10 +192,10 @@ class Gradebook:
         })
 
     def average_for(self, student_id):
-        scores = [
-            g["score"] for g in self._grades
-            if g["student_id"] == student_id
-        ]
+        scores = []
+        for g in self._grades:
+            if g["student_id"] == student_id:
+                scores.append(g["score"])
         return average(scores)
 
 
@@ -152,22 +208,32 @@ def older_than(students, min_age):
 
 def report(students, grades):
     """Задание 12. Текстовый отчёт о средних баллах (многострочная строка)."""
-    names = {s["id"]: s["name"] for s in students}
+    names = {}
+    for s in students:
+        names[s["id"]] = s["name"]
+
     scores = {}
     for g in grades:
-        scores.setdefault(g["student_id"], []).append(g["score"])
+        sid = g["student_id"]
+        if sid not in scores:
+            scores[sid] = []
+        scores[sid].append(g["score"])
 
     rows = []
     for sid, sc_list in scores.items():
         rows.append((names[sid], average(sc_list)))
 
-    # сортировка: по убыванию среднего, при равенстве — по имени
-    rows.sort(key=lambda x: (-x[1], x[0]))
+    def sort_key(item):
+        name, avg = item
+        return (-avg, name)
 
-    lines = [f"{'Студент':<10} {'Средний':>8}"]
+    rows.sort(key=sort_key)
+
+    lines = []
+    lines.append("Студент    Средний")
     for name, avg in rows:
-        lines.append(f"{name:<10} {avg:>8.2f}")
-    lines.append(f"Всего студентов с оценками: {len(rows)}")
+        lines.append(name + " " * (13 - len(name)) + format(avg, ".2f"))
+    lines.append("Всего студентов с оценками: " + str(len(rows)))
     return "\n".join(lines)
 
 
