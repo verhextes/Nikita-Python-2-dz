@@ -1,0 +1,133 @@
+-- Тема 1
+SELECT 'Я учу MySQL!';
+SELECT 'Маша';
+
+-- Тема 2
+CREATE DATABASE school CHARACTER SET utf8mb4;
+USE school;
+CREATE TABLE students (
+    id INT,
+    name VARCHAR(50),
+    grade INT
+);
+SHOW TABLES;
+DESCRIBE students;
+
+-- Тема 3
+-- имя: VARCHAR(50)
+-- возраст: INT
+-- цена с копейками: DECIMAL(8,2)
+-- день рождения: DATE
+-- ответ да/нет: BOOLEAN
+
+SELECT 2 + 2;
+SELECT CONCAT('2', '2');
+
+CREATE TABLE cakes (
+    id INT,
+    title VARCHAR(50),
+    price DECIMAL(6,2),
+    baked_on DATE,
+    is_fresh BOOLEAN
+);
+
+-- Тема 4
+CREATE TABLE games (id INT, title VARCHAR(50), rating INT);
+INSERT INTO games (id, title, rating) VALUES (1, 'Майнкрафт', 10);
+INSERT INTO games (id, title, rating) VALUES (2, 'Тетрис', 8), (3, 'Шахматы', 9);
+SELECT * FROM games;
+
+-- Тема 5
+SELECT name FROM pets;
+SELECT name, age AS "Возраст" FROM pets;
+SELECT 15 DIV 4;
+SELECT 15 % 4;
+
+-- Тема 6
+SELECT * FROM pets WHERE kind = 'собака';
+SELECT * FROM pets WHERE age > 2;
+SELECT * FROM pets WHERE kind IN ('кот', 'попугай');
+
+-- Тема 7
+SELECT * FROM pets ORDER BY age;
+SELECT * FROM pets ORDER BY name;
+SELECT * FROM pets ORDER BY age DESC LIMIT 2;
+
+-- Тема 8
+UPDATE games SET rating = 7 WHERE id = 1;
+INSERT INTO games (id, title, rating) VALUES (4, 'Леро', 6);
+DELETE FROM games WHERE id = 4;
+UPDATE games SET title = 'Новый Тетрис' WHERE id = 2;
+SELECT * FROM games;
+
+-- Тема 9
+SELECT COUNT(*) FROM pets;
+SELECT MIN(age), MAX(age) FROM pets;
+SELECT SUM(age) FROM pets WHERE kind = 'собака';
+
+-- Тема 10
+SELECT kind, COUNT(*) AS total FROM pets GROUP BY kind;
+SELECT kind, MAX(age) AS oldest FROM pets GROUP BY kind;
+SELECT kind, COUNT(*) AS total FROM pets GROUP BY kind HAVING COUNT(*) > 1;
+
+-- Тема 11
+CREATE TABLE friends (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    city VARCHAR(50) DEFAULT 'Москва'
+);
+INSERT INTO friends (name) VALUES ('Миша'), ('Лена'), ('Тимур');
+INSERT INTO friends (city) VALUES ('Омск');
+
+-- Тема 12
+CREATE TABLE clubs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(50) NOT NULL
+);
+CREATE TABLE kids (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    club_id INT,
+    FOREIGN KEY (club_id) REFERENCES clubs (id)
+);
+INSERT INTO clubs (title) VALUES ('Шахматы'), ('Рисование');
+INSERT INTO kids (name, club_id) VALUES ('Аня', 1), ('Боря', 2), ('Вера', 1);
+INSERT INTO kids (name, club_id) VALUES ('Гоша', 99);
+
+-- Тема 13
+SELECT p.name AS pet, o.name AS owner
+FROM pets AS p
+JOIN owners AS o ON p.owner_id = o.id;
+
+SELECT p.name AS pet
+FROM pets AS p
+JOIN owners AS o ON p.owner_id = o.id
+WHERE o.name = 'Аня';
+
+SELECT p.name AS pet, o.name AS owner
+FROM pets AS p
+LEFT JOIN owners AS o ON p.owner_id = o.id;
+
+-- Тема 14
+SELECT UPPER(name) FROM pets;
+SELECT name FROM pets WHERE name LIKE 'М%';
+SELECT CONCAT('Меня зовут ', name, ', мне ', age, ' лет') AS about FROM pets;
+
+-- Тема 15
+SELECT * FROM pets;
+SELECT name FROM pets;
+START TRANSACTION;
+UPDATE pets SET age = 100;
+SELECT name, age FROM pets;
+ROLLBACK;
+SELECT name, age FROM pets;
+
+-- Тема 16
+INSERT INTO readers (name, grade) VALUES ('Гоша', 6);
+INSERT INTO loans (reader_id, book_id, taken_on) VALUES (4, 2, '2026-10-01');
+
+SELECT r.name AS reader, COUNT(l.id) AS books_taken
+FROM readers AS r
+LEFT JOIN loans AS l ON l.reader_id = r.id
+GROUP BY r.id, r.name
+ORDER BY books_taken DESC, r.name;
